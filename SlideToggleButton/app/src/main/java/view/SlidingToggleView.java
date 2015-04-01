@@ -8,11 +8,14 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.Scroller;
 
-public class SlidingToggleView extends LinearLayout {
+import com.example.administrator.slidetogglebutton.R;
+
+public class SlidingToggleView extends ViewGroup {
 	private static final String TAG ="mSlidingView";
+    private static final int Vertical = 0;
+    private static final int Horizental = 1;
 	
 	//드래그 속도와 방향을 판단하는 클레스
 	private VelocityTracker mVelocityTracker = null;
@@ -32,22 +35,26 @@ public class SlidingToggleView extends LinearLayout {
 	private onMiddle mMiddle;
 	boolean scrolling = false;
 
+    private int Oriental;
+
 	public SlidingToggleView(Context context) {
 		super(context);
 		// TODO Auto-generated constructor stub
 		init();
+        Oriental = 1;
 	}
 	public SlidingToggleView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		// TODO Auto-generated constructor stub
-		init();
-	}
+        init();
+        Oriental = context.obtainStyledAttributes(attrs, R.styleable.SlidingToggleView).getInteger(R.styleable.SlidingToggleView_oriental, 1);
+    }
 
 
 	private void init(){
 		mScroller = new Scroller(getContext());
 		mLastPoint = new PointF();
-        setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
+        setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
         setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,12 +64,12 @@ public class SlidingToggleView extends LinearLayout {
         post(new Runnable() {
             @Override
             public void run() {
-                mTouchSlop = getWidth()/2;
+                mTouchSlop = getWidth() / 3;
             }
         });
 	}
 
-    public void setButtonRight(){
+    public void initToggleState(){
         if(getChildCount() == 0)
             return;
         post(new Runnable() {
@@ -70,7 +77,10 @@ public class SlidingToggleView extends LinearLayout {
             public void run() {
                 mCurPage = 1;
                 View v = getChildAt(0);
-                scrollTo(v.getWidth() - getWidth(),0);
+                if(Oriental == Horizental)
+                    scrollTo(v.getWidth() - getWidth(),0);
+                else if(Oriental == Vertical)
+                    scrollTo(0,v.getHeight() - getHeight());
             }
         });
     }
@@ -80,7 +90,27 @@ public class SlidingToggleView extends LinearLayout {
 		// TODO Auto-generated method stub
 		super.dispatchDraw(canvas);
 	}
-	@Override
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        for(int i = 0 ; i < getChildCount() ; i++ ){
+            View v = getChildAt(i);
+            measureChild(v, widthMeasureSpec, heightMeasureSpec);
+        }
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        for(int i = 0 ; i < getChildCount(); i++) {
+            final View v = getChildAt(i);
+            final int width = v.getMeasuredWidth();
+            final int height = v.getMeasuredHeight();
+            v.layout(0, 0, width, height);
+        }
+    }
+
+    @Override
 	public boolean onTouchEvent(MotionEvent event) {
 		// TODO Auto-generated method stub
 		if(mVelocityTracker == null)
@@ -99,10 +129,13 @@ public class SlidingToggleView extends LinearLayout {
 			break;
 		case MotionEvent.ACTION_MOVE:	
 		{
-			int x = (int)(event.getX() - mLastPoint.x); // 이전터치지점과 현재터치지점의 차이를 구해서 화면 스크롤하는데 이용
-			if(getScrollX() - x < -(getWidth()-getChildAt(0).getWidth()) || getScrollX() -x > 0)
-				x = 0;
-			scrollBy(-x, 0);//차이만큼 화면 스크롤
+			int gap = Oriental == Horizental ? (int)(event.getX() - mLastPoint.x) : (int)(event.getY() - mLastPoint.y); // 이전터치지점과 현재터치지점의 차이를 구해서 화면 스크롤하는데 이용
+			if(getScroll() - gap < EmptySpace() || getScroll() - gap > 0)
+                gap = 0;
+            if(Oriental == Horizental)
+                scrollBy(-gap, 0);//차이만큼 화면 스크롤
+            else
+                scrollBy(0, -gap);
 			invalidate();//다시 그리기
 			mLastPoint.set(event.getX(), event.getY());
 		}
@@ -114,12 +147,12 @@ public class SlidingToggleView extends LinearLayout {
 			mVelocityTracker.computeCurrentVelocity(1000);
 			int v = (int)mVelocityTracker.getXVelocity(); // x축 이동 속도를 구함
 			
-			int gap = getScrollX() + mCurPage * (getWidth()-getChildAt(0).getWidth());
+			int gap = getScroll() + mCurPage * (-EmptySpace());
 			int nextPage = mCurPage;
 			//드래그 속도가 snap_Velocity보다 높거나 화면 반이상 드래그 했으면 화면 전환 할것을 nextpage에 저장
-			if((v>SNAP_VELOCITY || gap < -(getWidth()-getChildAt(0).getWidth())/2)){
+			if((v>SNAP_VELOCITY || gap < EmptySpace()/2)){
 				nextPage--;
-			}else if((v < -SNAP_VELOCITY || gap > (getWidth()-getChildAt(0).getWidth())/2)){
+			}else if((v < -SNAP_VELOCITY || gap > -EmptySpace()/2)){
 				nextPage++;
 			}
 			if(nextPage < 0)
@@ -128,9 +161,9 @@ public class SlidingToggleView extends LinearLayout {
 				nextPage = 1;
 			int move = 0;
 			if(mCurPage != nextPage){ // 화면 전환 스크롤 계싼 현재 스크롤 지점에서 화면 전환을 위해 이동해야하는 지점과의 거리 계산
-				move = (getWidth()-getChildAt(0).getWidth())*(-nextPage) - getScrollX();
+				move =  (-EmptySpace())*(-nextPage) - getScroll();
 			}else{//원래 화면 복귀 스크롤 계산 화면 전호나 하지 않을 것이며 원래 페이지로 돌아가기 위한 이동해야하는 거리 계산
-				move = (getWidth()-getChildAt(0).getWidth())*(-mCurPage) - getScrollX();
+				move = (-EmptySpace())*(-mCurPage) - getScroll();
 			}
 			//핵심!! 현재 스크롤 지점과 이동하고자 하는 최종 목표 스크롤 지점을 성정하는 메서드
 			//현재 지점에서 목표지점까지 스크롤로 이동하기 위한 중간값들을 자동으로 구해준다./
@@ -139,8 +172,10 @@ public class SlidingToggleView extends LinearLayout {
 			//그러면 스크롤 애니메이션이 되는 것처럼 보인다.(computeScroll()참조)
 			
 			mCurPage = nextPage;
-
-			mScroller.startScroll(getScrollX(), 0, move, 0, Math.abs(move));
+            if(Oriental == Horizental)
+                mScroller.startScroll(getScroll(), 0, move, 0, Math.abs(move));
+            else
+                mScroller.startScroll(0, getScroll(), 0, move, Math.abs(move));
 			invalidate();
 			//터치가 끝났으니 저장해두었던 터치 정보들 삭제하고, 터치 상태는 일반으로 변경
 			
@@ -164,10 +199,20 @@ public class SlidingToggleView extends LinearLayout {
 		}else if(mCurPage == 1){
 			mCurPage = 0;
 		}
-		move = (getWidth()-getChildAt(0).getWidth())*(-mCurPage) - getScrollX();
-		mScroller.startScroll(getScrollX(), 0, move, 0, Math.abs(move));
+		move = (-EmptySpace())*(-mCurPage) - getScroll();
+        if(Oriental == Horizental)
+            mScroller.startScroll(getScroll(), 0, move, 0, Math.abs(move));
+        else
+            mScroller.startScroll(0, getScroll(), 0, move, Math.abs(move));
 		invalidate();
 	}
+
+    private int EmptySpace(){
+        return Oriental == Horizental ? -(getWidth()-getChildAt(0).getWidth()) : -(getHeight()-getChildAt(0).getHeight());
+    }
+    private int getScroll(){
+        return Oriental == Horizental ? getScrollX() : getScrollY();
+    }
 
     //중요함//
 	@Override
@@ -187,13 +232,13 @@ public class SlidingToggleView extends LinearLayout {
             invalidate();
 		}else{
 			if(mMiddle != null && scrolling) {
-                int scrollX = -getScrollX();
-                mMiddle.onMiddle(scrollX, (getWidth()-getChildAt(0).getWidth()));
-                if(scrollX < ((getWidth()-getChildAt(0).getWidth())/2)){
-                    mMiddle.LeftValue();
+                int scroll = -getScroll();
+                mMiddle.onMiddle(scroll, (getWidth()-getChildAt(0).getWidth()));
+                if(scroll < (-EmptySpace())/2){
+                    mMiddle.DefaultValue();
                 }
-                if(scrollX > ((getWidth()-getChildAt(0).getWidth())/2)){
-                    mMiddle.RightValue();
+                if(scroll > (-EmptySpace())/2){
+                    mMiddle.SettingValue();
                 }
             }
 			scrolling = false;
@@ -220,9 +265,9 @@ public class SlidingToggleView extends LinearLayout {
 		case MotionEvent.ACTION_MOVE:
 		{
 			//자식부의 이벤트인가 아니면 화면전환 동작 이벤트를 판단하는 기준의 기본이 되는 드래그 이동 거리를 체크 계산한다.
-			int move_x = Math.abs(x-(int)mLastPoint.x);
+			int move = Oriental == Horizental ? Math.abs(x-(int)mLastPoint.x) : Math.abs(y-(int)mLastPoint.y);
 			//만약 처음 처티지점에서 mTouchSlop만큼 이동되면 화면전환을 위한 동작으로 판단
-			if(move_x > mTouchSlop){
+			if(move > mTouchSlop){
 				mCUrTouchState = TOUCH_STATE_SCROLLING; // guswo tkdxo tmzmfhf tkdxofh wjsghks
 				mLastPoint.set(x, y);
 			}
@@ -233,14 +278,13 @@ public class SlidingToggleView extends LinearLayout {
 		default:
 			break;
 		}
-		
 		//현재 상태가 스크롤 중이라면 true를 리턴하여 viewgroup의 ontouchevent가 발동
 		return mCUrTouchState == TOUCH_STATE_SCROLLING;
 	}
 	public interface onMiddle{
-        public void onMiddle(int scrollX, int middle);
-        public void LeftValue();
-        public void RightValue();
+        public void onMiddle(int scroll, int middle);
+        public void DefaultValue();
+        public void SettingValue();
 	}
 	public void setOnMiddle(onMiddle middle){
 		this.mMiddle = middle;

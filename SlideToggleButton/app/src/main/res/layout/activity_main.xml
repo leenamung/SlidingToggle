@@ -5,21 +5,25 @@
     android:padding="20dp"
     android:orientation="vertical"
     tools:context=".MainActivity">
+
     <TextView
         android:id="@+id/txt"
         android:layout_marginBottom="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Left"/>
-    <view.SlidingToggleView
+        android:text="Left" />
+
+    <view.SlidingToggleView xmlns:SlidingToggleView="http://schemas.android.com/apk/res/com.example.administrator.slidetogglebutton"
         android:id="@+id/slide"
+        SlidingToggleView:oriental="horizental"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:background="#ffffff">
+
         <View
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="#000000"/>
+            android:background="#000000" />
     </view.SlidingToggleView>
 
     <TextView
@@ -28,16 +32,63 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
-        android:text="Left"/>
-    <view.SlidingToggleView
+        android:text="Right" />
+
+    <view.SlidingToggleView xmlns:SlidingToggleView="http://schemas.android.com/apk/res/com.example.administrator.slidetogglebutton"
         android:id="@+id/slide2"
+        SlidingToggleView:oriental="horizental"
         android:layout_width="100dp"
         android:layout_height="50dp"
         android:background="#ffffff">
+
         <View
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:background="#000000"/>
+            android:background="#000000" />
     </view.SlidingToggleView>
 
+    <TextView
+        android:id="@+id/txt3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:text="Top" />
+
+    <view.SlidingToggleView xmlns:SlidingToggleView="http://schemas.android.com/apk/res/com.example.administrator.slidetogglebutton"
+        android:id="@+id/slide3"
+        android:layout_height="100dp"
+        SlidingToggleView:oriental="vertical"
+        android:background="#ffffff"
+        android:layout_width="50dp">
+
+        <View
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="#000000" />
+
+    </view.SlidingToggleView>
+
+
+    <TextView
+        android:id="@+id/txt4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:text="Bottom" />
+
+    <view.SlidingToggleView xmlns:SlidingToggleView="http://schemas.android.com/apk/res/com.example.administrator.slidetogglebutton"
+        android:id="@+id/slide4"
+        android:layout_height="100dp"
+        SlidingToggleView:oriental="vertical"
+        android:background="#ffffff"
+        android:layout_width="50dp">
+
+        <View
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="#000000" />
+
+    </view.SlidingToggleView>
 </LinearLayout>
